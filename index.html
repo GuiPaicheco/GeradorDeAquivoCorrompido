@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Corrupt File Generator Pro</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Segoe UI, sans-serif;
+    background:#0f172a;
+    color:white;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+.container{
+    width:100%;
+    max-width:900px;
+    background:#1e293b;
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 0 40px rgba(0,0,0,.4);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.card{
+    background:#334155;
+    padding:15px;
+    border-radius:12px;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+}
+
+input, select{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    background:#0f172a;
+    color:white;
+}
+
+button{
+    width:100%;
+    margin-top:20px;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#3b82f6;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#2563eb;
+}
+
+.progress{
+    height:20px;
+    background:#111827;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:20px;
+}
+
+.bar{
+    height:100%;
+    width:0%;
+    background:#22c55e;
+    transition:.3s;
+}
+
+.history{
+    margin-top:20px;
+    background:#111827;
+    padding:15px;
+    border-radius:10px;
+    max-height:200px;
+    overflow:auto;
+}
+
+.item{
+    padding:8px;
+    border-bottom:1px solid #334155;
+}
+
+@media(max-width:700px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🛠 Corrupt File Generator Pro</h1>
+
+<div class="grid">
+
+<div class="card">
+<label>Nome do arquivo</label>
+<input id="nome" value="arquivo">
+</div>
+
+<div class="card">
+<label>Extensão</label>
+<input id="ext" value="pdf">
+</div>
+
+<div class="card">
+<label>Tamanho</label>
+<input id="size" type="number" value="1">
+</div>
+
+<div class="card">
+<label>Unidade</label>
+<select id="unit">
+<option value="kb">KB</option>
+<option value="mb">MB</option>
+</select>
+</div>
+
+<div class="card">
+<label>Quantidade</label>
+<input id="qty" type="number" value="1" min="1" max="100">
+</div>
+
+<div class="card">
+<label>Nível de Corrupção</label>
+<select id="corruption">
+<option value="100">100% Aleatório</option>
+<option value="75">75%</option>
+<option value="50">50%</option>
+<option value="25">25%</option>
+</select>
+</div>
+
+</div>
+
+<button onclick="generateFiles()">
+Gerar Arquivos
+</button>
+
+<div class="progress">
+<div class="bar" id="bar"></div>
+</div>
+
+<div class="history" id="history">
+Nenhum arquivo gerado.
+</div>
+
+</div>
+
+<script>
+
+const historyBox = document.getElementById("history");
+
+function randomBytes(length){
+
+    const arr = new Uint8Array(length);
+
+    const chunk = 65536;
+
+    for(let i=0;i<length;i+=chunk){
+
+        const end = Math.min(i+chunk,length);
+
+        crypto.getRandomValues(
+            arr.subarray(i,end)
+        );
+    }
+
+    return arr;
+}
+
+async function generateFiles(){
+
+    const name =
+        document.getElementById("nome").value;
+
+    const ext =
+        document.getElementById("ext").value;
+
+    const size =
+        Number(document.getElementById("size").value);
+
+    const qty =
+        Number(document.getElementById("qty").value);
+
+    const unit =
+        document.getElementById("unit").value;
+
+    const bar =
+        document.getElementById("bar");
+
+    historyBox.innerHTML = "";
+
+    let bytes =
+        unit === "mb"
+        ? size * 1024 * 1024
+        : size * 1024;
+
+    for(let i=1;i<=qty;i++){
+
+        let data = randomBytes(bytes);
+
+        let blob =
+            new Blob([data],{
+                type:"application/octet-stream"
+            });
+
+        let a =
+            document.createElement("a");
+
+        a.href =
+            URL.createObjectURL(blob);
+
+        a.download =
+            `${name}_${i}.${ext}`;
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+        historyBox.innerHTML += `
+        <div class="item">
+        ${name}_${i}.${ext}
+        (${(bytes/1024).toFixed(0)} KB)
+        </div>
+        `;
+
+        bar.style.width =
+            `${(i/qty)*100}%`;
+
+        await new Promise(
+            r=>setTimeout(r,100)
+        );
+    }
+}
+
+</script>
+
+</body>
+</html>
